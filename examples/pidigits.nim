@@ -4,7 +4,6 @@
 
 import gmp
 import gmp/utils
-import unsigned
 import strutils
 import os
 
@@ -19,22 +18,26 @@ proc extract_digit(nth: culong): culong =
   result = mpz_get_ui(tmp1)
 
 proc eliminate_digit(d: culong) =
-   mpz_submul_ui(acc, den, d)
-   mpz_mul_ui(acc, acc, 10)
-   mpz_mul_ui(num, num, 10)
+  mpz_submul_ui(acc, den, d)
+  mpz_mul_ui(acc, acc, 10)
+  mpz_mul_ui(num, num, 10)
 
- 
+
 proc next_term(k: culong) =
-   var k2: culong = k * 2 + 1
-   mpz_addmul_ui(acc, num, 2)
-   mpz_mul_ui(acc, acc, k2)
-   mpz_mul_ui(den, den, k2)
-   mpz_mul_ui(num, num, k)
+  var k2: culong = k * 2 + 1
+  mpz_addmul_ui(acc, num, 2)
+  mpz_mul_ui(acc, acc, k2)
+  mpz_mul_ui(den, den, k2)
+  mpz_mul_ui(num, num, k)
 
 proc main =
   var d, k: culong
   var i: uint64
-  var n: int = parseInt paramStr(1)
+  var n: int
+  try:
+    n = parseInt paramStr(1)
+  except IndexDefect:
+    quit 1
   
   mpz_init(tmp1)
   mpz_init(tmp2)
@@ -57,5 +60,5 @@ proc main =
     if (i mod 10'u64).uint64 == 0'u64:  echo "\t:" & $i
     eliminate_digit(d)
 
-main()
-    
+when isMainModule:
+  main()

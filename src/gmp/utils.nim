@@ -1,20 +1,11 @@
 import gmp
-import math
-
-{.deadCodeElim: on.}
-{.push hints: off.}
-{.experimental.}
 
 ################################################################################
 # multi-precision ints
 ################################################################################
 
-
-proc finalise(a: ref mpz_t) =
-  mpz_clear(a[])
- 
 proc new_mpz*(): ref mpz_t =
-  new(result,finalise)
+  new result # new(result, finalise)
   mpz_init(result[])
   
 proc init_mpz*(): mpz_t =
@@ -53,7 +44,7 @@ proc init_mpz*(val: clong): mpz_t =
   mpz_init_set_si(result,val)
   
 proc new_mpz*(val: clong): ref mpz_t =
-  new(result,finalise)
+  new result # new(result,finalise)
   mpz_init_set_si(result[],val)
   
 template mpz_p*(a: clong{lit}): mpz_ptr {.deprecated.} =
@@ -63,22 +54,22 @@ template mpz_p*(a: clong{lit}): mpz_ptr {.deprecated.} =
   temp[].addr    
   
 proc new_mpz*(enc: string, base: cint = 10): ref mpz_t =
-  new(result,finalise)
+  new result # new(result,finalise)
   if mpz_init_set_str(result[],enc, base) != 0: 
     raise newException(ValueError,enc & " represents an invalid value")
 
 #NOTE: default params don't work with static 
-proc alloc_mpz_t*(shared: static[bool]): ptr mpz_t =
-  when shared:
+proc alloc_mpz_t*(is_shared: static[bool]): ptr mpz_t =
+  when is_shared:
     #FIXME: U variant doesn't compile at the moment
     result = createShared(mpz_t,sizeof(mpz_t))
   else:
     result = cast[ptr mpz_t](alloc0(sizeof(mpz_t)))
   mpz_init(result)
   
-proc dealloc_mpz_t*(a: ptr mpz_t, shared: static[bool]) =
+proc dealloc_mpz_t*(a: ptr mpz_t, is_shared: static[bool]) =
   mpz_clear(a)
-  when shared:
+  when is_shared:
     # FIXME: freeShared currently bugged (won't compile)
     discard reallocShared(a,0)
   else:
@@ -99,11 +90,11 @@ proc cmp*(a,b: mpz_t): int =
 
 proc `$`*(a: mpz_t, base: cint = 10): string =
   result = newString(mpz_sizeinbase(a, base) + 1)
-  return $mpz_get_str(result,base,a)
+  return $mpz_get_str(result.cstring,base,a)
   
 proc `$`*(a: ptr mpz_t, base: cint = 10): string =
   result = newString(mpz_sizeinbase(a, base) + 1)
-  return $mpz_get_str(result,base,a)
+  return $mpz_get_str(result.cstring,base,a)
   
 proc copy*(a: mpz_t): mpz_t =
   ## you must use this function in instead of assignment
@@ -111,16 +102,13 @@ proc copy*(a: mpz_t): mpz_t =
   return result
   
 # careful when copying values!!!
-proc destroy*(a: var mpz_t) {.destructor.} =
-  mpz_clear(a)
+# proc `=destroy`*(a: var mpz_t) =
+#   mpz_clear(a)
 
 
 ################################################################################
 # multi-precision floats
 ################################################################################
-
-proc finalise(a: ref mpf_t) =
-  mpf_clear(a[])
 
 proc init_mpf*(): mpf_t =
   mpf_init(result)
@@ -156,7 +144,7 @@ proc init_mpf*(val: float): mpf_t =
   mpf_init_set_d(result,val)
   
 proc new_mpf*(val: float): ref mpf_t =
-  new(result,finalise)
+  new result # new(result,finalise)
   mpf_init_set_d(result[],val)
   
 proc init_mpf*(val: clong): mpf_t =
@@ -193,7 +181,7 @@ proc toFloat*(a: var mpf_t): float =
   if result == Inf:
     raise newException(ValueError, "number too large")
 
-proc `$`*(a: mpf_t, base: cint = 10, n_digits = 10): string =
+proc `$`*(a: mpf_t, base: cint = 10, n_digits: csize_t = 10): string =
   var outOfRange = false
   var floatVal: float
   
@@ -211,7 +199,7 @@ proc `$`*(a: mpf_t, base: cint = 10, n_digits = 10): string =
   var exp: mp_exp_t
   # +1 for possible minus sign
   var str = newString(n_digits + 1)
-  let coeff = $mpf_get_str(str,exp,base,n_digits,a)
+  let coeff = $mpf_get_str(str.cstring, exp, base, n_digits, a)
   if (exp != 0):
     return coeff & "e" & $exp
   if coeff == "":
@@ -231,14 +219,12 @@ proc `<=`*(a,b: mpf_t): bool =
 proc cmp*(a,b: mpf_t): int =
   return mpf_cmp(a,b)
   
-proc destroy*(a: var mpf_t) {.destructor.} =
-  mpf_clear(a)
+# proc `=destroy`*(a: var mpf_t) =
+#   mpf_clear(a)
   
 converter convert*(a: mpz_t): mpf_t =
   result = init_mpf()
   mpf_set_z(result,a)
-
-{.pop.}
 
 when isMainModule:
   proc testEq() =
@@ -308,7 +294,7 @@ when isMainModule:
     assert($test == "123")
     
     var res: mpz_t = init_mpz(0)
-    mpz_add(res.addr,mpz_p(5),mpz_p(19))
+    mpz_add(res.addr, mpz_p(5), mpz_p(19))
     
     # a bit clunky 
     assert res == mpz_p(24)[]

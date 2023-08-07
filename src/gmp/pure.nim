@@ -6,8 +6,6 @@
 # distribution, for details about the copyright.
 #
 
-{.deadCodeElim: on.}
-
 when defined(windows):
   const libgmp* = "libgmp.dll"
 elif defined(macosx):
@@ -1503,13 +1501,22 @@ const
   GMP_ERROR_INVALID_ARGUMENT* = 8
 
 proc finalize_mpz*(x: ref mm_mpz_struct) =
-   mpz_clear(x[])
+  mpz_clear(x[])
 
 proc finalize_mpq*(x: ref mm_mpq_struct) =
-   mpq_clear(x[])
+  mpq_clear(x[])
 
 proc finalize_mpf*(x: ref mm_mpf_struct) =
-   mpf_clear(x[])
+  mpf_clear(x[])
+
+proc `=destroy`*(a: mm_mpz_struct) =
+  mpz_clear(a.addr)
+
+proc `=destroy`*(a: mm_mpq_struct) =
+  mpq_clear(a.addr)
+
+proc `=destroy`*(a: mm_mpf_struct) =
+  mpf_clear(a.addr)
 
 when isMainModule:
   var a = mpz_t()
