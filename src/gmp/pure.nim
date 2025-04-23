@@ -1509,14 +1509,25 @@ proc finalize_mpq*(x: ref mm_mpq_struct) =
 proc finalize_mpf*(x: ref mm_mpf_struct) =
   mpf_clear(x[])
 
-proc `=destroy`*(a: mm_mpz_struct) =
-  mpz_clear(a.addr)
+when NimMajor >= 2:
+  proc `=destroy`*(a: mm_mpz_struct) =
+    mpz_clear(a.addr)
 
-proc `=destroy`*(a: mm_mpq_struct) =
-  mpq_clear(a.addr)
+  proc `=destroy`*(a: mm_mpq_struct) =
+    mpq_clear(a.addr)
 
-proc `=destroy`*(a: mm_mpf_struct) =
-  mpf_clear(a.addr)
+  proc `=destroy`*(a: mm_mpf_struct) =
+    mpf_clear(a.addr)
+else:
+  proc `=destroy`*(a: var mm_mpz_struct) =
+    mpz_clear(a.addr)
+
+  proc `=destroy`*(a: var mm_mpq_struct) =
+    mpq_clear(a.addr)
+
+  proc `=destroy`*(a: var mm_mpf_struct) =
+    mpf_clear(a.addr)
+
 
 when isMainModule:
   var a = mpz_t()
