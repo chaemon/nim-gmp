@@ -1,7 +1,7 @@
 [Package]
 name          = "gmp"
-version       = "0.2.6"
-author        = "Will Szumski"
+version       = "0.2.7"
+author        = "Toshihiro Shimizu"
 description   = "Wrapper for the GNU Multiple Precision Arithmetic Library (GMP)"
 license       = "MIT"
 srcDir        = "src"

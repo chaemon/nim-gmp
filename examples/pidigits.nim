@@ -37,8 +37,8 @@ proc main =
   try:
     n = parseInt paramStr(1)
   except IndexDefect:
-    quit 1
-  
+    quit("Use: " & paramStr(0) & " <number>")
+
   mpz_init(tmp1)
   mpz_init(tmp2)
   
